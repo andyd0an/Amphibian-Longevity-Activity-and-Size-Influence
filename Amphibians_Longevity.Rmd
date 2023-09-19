@@ -1,0 +1,268 @@
+---
+title: "Amphibian Longevity: Activity and Size Influence"
+author: "Andy Doan"
+output: html_document
+---
+
+```{r data and libraries, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+
+library(readr)
+library(psych)
+library(car)
+library(multcomp)
+library(ggplot2)
+library(bookdown)
+library (tidyverse)
+library(here)
+
+amphibians <- read.csv("AmphiBIO_v1.csv")
+amphibians[is.na(amphibians)] <- 0
+
+
+```
+```{r}
+#clean data
+clean.amphibians <- amphibians[c(16,17,26,29)]
+names(clean.amphibians) <- c("day","night","body.size.mm","longevity.y")
+clean.amphibians$day <- as.factor(clean.amphibians$day)
+clean.amphibians$night <- as.factor(clean.amphibians$night)
+clean.amphibians2 <- clean.amphibians %>%
+  drop_na(longevity.y)
+clean.amphibians2[clean.amphibians2==0] <- NA
+smaller.amphibians <- sample_n(clean.amphibians2, 500)
+#transform data
+loglongevity <- log(smaller.amphibians$longevity.y+1)
+logbodysize <- log(smaller.amphibians$body.size.mm+1)
+```
+
+## Abstract
+
+Studying the activity patterns and body size of amphibians is crucial for understanding their ecological dynamics and survival strategies in diverse environments. The data examined is composed of two categorical and two quantitative variables all randomly sampled. The data was assessed by performing a T-test and Linear Regression. It was found that daytime active amphibians life span are greater and greater body size affect their life span positively.
+
+## Introduction
+
+The data set, AmphiBIO, is an extensive database containing natural history traits of 6775 amphibian species globally. The researchers of this database surveyed amphibian traits commonly reported in scientific literature. Seventeen traits were selected that are related to amphibian ecology, morphology, and reproduction. A systematic search was conducted in primarily peer-reviewed scientific publications to be compiled into this database. With this data, there are 6776 observations and 38 variables. However, for this analysis 250 observations were randomly sleeted and 4 variables were studied.
+
+The goal for this analysis is using the AmphiBio database to study the life span of amphibians with the selected variables. I have selected to study the data of when the amphibians are active during the day (diurnal) and active during the night (nocturnal), and the body sizes of the amphibians and see if there is a interest or correlation to the longevity of them. Therefore I propose the question; How do activity time of the day and body size affect longevity of the amphibians? With this, there are two hypotheses: 1) I hypothesize that body size significantly predicts the longevity life span of an amphibian. 2) I hypothesize that amphibians active during day time significantly predicts that the amphibian live longer. 
+
+## Exploratory Data Analysis
+### Boxplots
+
+I graphed the data in box plots to compare the differences in longevity and activeness at day and night, as well as body size and activeness at day and night. From here we see that, for the body size comparison there are outliers while the logged longevity did not have any. The biggest difference noted is that for body size, the interquartile range and max is much shorter for the activity during night compared to the activity during the day.
+
+```{r warnings=FALSE, fig.show="hold", echo=FALSE, output=FALSE, fig.cap="Figure 1. 4 Boxplots of longevity/body sizes in mm during activity at day and night. Body size with activity during day and night had outliers."}
+
+par(mfrow=c(2,2))
+boxplot(loglongevity ~ day, data=smaller.amphibians, xlab="Active during Day") #no outliers
+boxplot(loglongevity ~ night, data=smaller.amphibians, xlab="Active during Night") #no outliers
+boxplot(body.size.mm ~ day, data=smaller.amphibians, xlab="Active during Day") #outliers
+boxplot(body.size.mm ~ night, data=smaller.amphibians, xlab="Active during Night") #outliers
+par(mfrow=c(1,1))
+
+```
+
+### Histograms
+
+I used histograms to explore the distribution more. It allowed me to determine and test if the data was normal or not. A bell like curve shape is a good indication of the data being normal and no skewness from outliers. The data shows that longevity is very much normal after being transformed. For Body sized it is not normal, but it may also become more normal if it were to be log transformed like longevity was. For logged longevity you may see a slight skew to the left, however it is very weak and won't do any harm due to the Central Limit Theorem which will considered the graph to be normal approximately. This is because the theorem states that a data with sufficiently large random sample (this being 250) it may be considered normal.
+
+```{r warnings=FALSE, fig.show="hold", echo=FALSE, output=FALSE, fig.cap="Figure 2. Histograms of change in longevity and change in body size. The longevity histogram closely follows a bell-shaped curve with a slight skew to the left, which can be considered insignifcant due to the Central Limit Theorem. The second histogram of body size has a heavy skew to the right."}
+par(mfrow=c(2,2))
+hist(loglongevity, main="Logged Longevity (Years)", xlab="Logged Longevity (years)") #normal
+hist(smaller.amphibians$body.size.mm, main="Body Size (mm)", xlab="Body Size (mm)") #not normal
+par(mfrow=c(1,1))
+```
+
+## Statistical Methods
+
+#### T-Test
+
+A two sample t-test was conducted to compare the means of longevity of the diurnal amphibians versus the nocturnal amphibians. In doing so we will be able to see which amphibian; diurnal or nocturnal, will live the longest on average. Before doing so we made sure to test the assumptions and found that both were mostly normal and so we can continue with the test. To further check normality we conducted a Shapiro Wilks test and found that they both have a p-value of greater than the alpha 0.05 meaning that we fail to reject the null hypothesis that data is normal. After performing a T-test. We ended up with a p-value of 0.5295 showing we fail to reject null and concluded that amphibians that are active during day lives longer than active during night. This method answered our hypotheses question of amphibians active during day time will significantly predict that the amphibian live longer and that amphibians active during night time will significantly predict that the amphibian live shorter.
+
+#### Linear Regression
+
+For the next test a linear regression was conducted. A linear regression is a mathematical model used to perform predictive analysis. Therefore doing this in my study will show if the growth of body size is relevant to longer lifes amphibians. Before doing so assumptions must be checked before continuing. We found most of them to be normal. Looking at the graph for body size and longevity, we can see an upward trend going on showing that greater body size is related to longer lifes in amphibians. This answers our hypothesis that body size significantly predicts the longevity life span of an amphibian.
+
+## Results
+
+#### T-Test
+
+The result of the T-test was that with a p-value of we reject null and concluded with the conclusion that amphibians who are active during the day lives longer than active during the night.
+
+#### Linear Regression
+
+Based off the observed trends and graphs shown by the body size and longevity, we can see that it is an upward trend which goes to show that increase in body size will increase life span.
+
+## Discussion
+
+After conducting all the statistical methods we were able to answer our hypothesis. Hypothesis 1) I hypothesize that body size significantly predicts the longevity life span of an amphibian. This was answered in the linear regression when we saw the graph had an upward trend. Hypothesis 2) I hypothesize that amphibians active during night time significantly predicts that the amphibian live longer, AND hypothesis 3) I hypothesize that amphibians active during day time significantly predicts that the amphibian live shorter. These both were answered in the T-test when we found that amphibians that are more active at night lives longer than amphibians who are active during the day
+
+## References
+
+Oliveira, B., São-Pedro, V., Santos-Barrera, G. *et al.* AmphiBIO, a global database for amphibian ecological traits. *Sci Data* **4,** 170123 (2017). <https://doi.org/10.1038/sdata.2017.123>
+
+H. Wickham. ggplot2: Elegant Graphics for Data
+Analysis. Springer-Verlag New York, 2016.
+
+John Fox and Sanford Weisberg (2019). An {R} Companion
+to Applied Regression, Third Edition. Thousand Oaks
+CA: Sage. URL: https://socialsciences.mcmaster.ca/jfox/Books/Companion/
+
+R Core Team (2020). R: A language and environment for
+statistical computing. R Foundation for Statistical
+Computing, Vienna, Austria. URL: https://www.R-project.org/.
+
+Torsten Hothorn, Frank Bretz and Peter Westfall (2008). Simultaneous Inference in General Parametric Models. Biometrical Journal 50(3), 346--363.
+
+
+## Appendix
+
+```{r}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
+
+#Load AmphibiansBIO Data
+amphibians <- read.csv("AmphiBIO_v1.csv")
+amphibians[is.na(amphibians)] <- 0
+
+
+```
+```{r}
+#clean data
+clean.amphibians <- amphibians[c(16,17,26,29)]
+names(clean.amphibians) <- c("day","night","body.size.mm","longevity.y")
+clean.amphibians$day <- as.factor(clean.amphibians$day)
+clean.amphibians$night <- as.factor(clean.amphibians$night)
+clean.amphibians2 <- clean.amphibians %>%
+  drop_na(longevity.y)
+clean.amphibians2[clean.amphibians2==0] <- NA
+smaller.amphibians <- sample_n(clean.amphibians2, 500)
+#transform data
+loglongevity <- log(smaller.amphibians$longevity.y+1)
+logbodysize <- log(smaller.amphibians$body.size.mm+1)
+```
+
+```{r}
+
+#general data checking
+head(clean.amphibians2)
+dim(clean.amphibians2)
+summary(clean.amphibians2)
+
+```
+
+```{r}
+#check numeric vars for distributions and normality
+par(mfrow=c(2,2))
+hist(loglongevity, main="Logged Longevity (Years)", xlab="Logged Longevity (years)") #normal
+hist(smaller.amphibians$body.size.mm, main="Body Size (mm)", xlab="Body Size (mm)") #not normal
+par(mfrow=c(1,1))
+
+shapiro.test(loglongevity) #not normal
+shapiro.test(smaller.amphibians$body.size.mm) #not normal
+
+
+par(mfrow=c(2,2))
+qqPlot(loglongevity) #looks normal
+qqPlot(smaller.amphibians$body.size.mm) #looks mostly normal
+par(mfrow=c(1,1))
+
+
+#numeric vars vs. categorical
+par(mfrow=c(2,2))
+boxplot(loglongevity ~ day, data=smaller.amphibians, xlab="Active during Day") #no outliers
+boxplot(loglongevity ~ night, data=smaller.amphibians, xlab="Active during Night") #no outliers
+boxplot(body.size.mm ~ day, data=smaller.amphibians, xlab="Active during Day") #couple outliers
+boxplot(body.size.mm ~ night, data=smaller.amphibians, xlab="Active during Night") #couple outliers
+par(mfrow=c(1,1))
+
+```
+
+### Statistical methods
+
+#### T-test
+
+```{r}
+#create variables
+
+active.day <- smaller.amphibians$day=="1"
+active.night <- smaller.amphibians$night=="1"
+
+#check assumptions
+with(smaller.amphibians, qqPlot(loglongevity[day=="1"])) #mostly normal
+with(smaller.amphibians, qqPlot(loglongevity[night=="1"])) #mostly normal
+
+#Shapiro-wilk tests
+with(smaller.amphibians, shapiro.test(loglongevity[day=="1"])) #p-value = 0.1684 fail to reject null, normal
+with(smaller.amphibians, shapiro.test(loglongevity[night=="1"])) #p-value = 0.3242  fail to reject null, normal
+
+
+#perform t-test
+lifespan.day <- smaller.amphibians$longevity.y[smaller.amphibians$day=="1"]
+lifespan.night <- smaller.amphibians$longevity.y[smaller.amphibians$night=="1"]
+t.test(lifespan.night, lifespan.day, var.equal = TRUE) #p-value 0.5295, fail to reject null
+#active during night lives longer than active during day
+
+#ggplot
+
+ggplot(smaller.amphibians, aes(x=active.day, y= longevity.y))+
+  geom_boxplot()+
+  labs(title= "ggPlot of T-test day", x="Activity in Day", y="Life Span (years)")
+
+ggplot(smaller.amphibians, aes(x=active.night, y= longevity.y))+
+  geom_boxplot()+
+  labs(title= "ggPlot of T-test night", x="Activity in night", y="Life Span (years)" )
+
+
+```
+
+#### Linear regression
+
+```{r}
+
+#linear regression
+
+fit1 <- lm(loglongevity ~ logbodysize, data =smaller.amphibians) 
+par(mfrow=c(2,2))
+plot(fit1) #looks homoskedastic
+par(mfrow=c(1,1))
+res1 <- fit1$residuals
+qqPlot(res1) #normal
+shapiro.test(res1) #normal p-value 0.1451
+
+#run the lm
+summary(fit1) #p-value less than 0.05 - significant predictor body size
+
+fit2 <- lm(loglongevity ~ active.day, data =smaller.amphibians) 
+par(mfrow=c(2,2))
+plot(fit2)
+par(mfrow=c(1,1))
+res2 <- fit2$residuals
+qqPlot(res2) #normal mostly
+shapiro.test(res2) #normal p-value 0.1684
+
+fit3 <- lm(loglongevity ~ active.night, data =smaller.amphibians) 
+par(mfrow=c(2,2))
+plot(fit3)
+par(mfrow=c(1,1))
+res3 <- fit3$residuals
+qqPlot(res3) #normal mostly
+shapiro.test(res3) #normal p-value 0.3242
+
+ggplot(smaller.amphibians, aes(x=logbodysize, y=loglongevity))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(text = element_text(size=18))
+
+ggplot(smaller.amphibians, aes(x=active.day, y=longevity.y))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(text = element_text(size=18))
+
+ggplot(smaller.amphibians, aes(x=active.night, y=longevity.y))+
+  geom_boxplot()+
+  theme_bw()+
+  theme(text = element_text(size=18))
+
+
+
+```
